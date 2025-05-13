@@ -9,6 +9,16 @@ import prettierPlugin from "eslint-plugin-prettier";
 import tseslint from "typescript-eslint";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
 
+// import  from rules
+import bestPractices from "./rules/best-practices.js";
+import errors from "./rules/errors.js";
+import node from "./rules/node.js";
+import style from "./rules/style.js";
+import variables from "./rules/variables.js";
+import es6 from "./rules/es6.js";
+import imports from "./rules/imports.js";
+import strict from "./rules/strict.js";
+
 export default [
   js.configs.recommended,
   {
@@ -20,14 +30,14 @@ export default [
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
+          generators: false,
+          objectLiteralDuplicateProperties: false,
         },
       },
-      globals: Object.fromEntries(
-        Object.entries(globals.browser).map(([key, value]) => [
-          key.trim(),
-          value,
-        ]),
-      ),
+      globals: {
+        ...globals.browser,
+        es6: true,
+      },
     },
     plugins: {
       import: importPlugin,
@@ -38,23 +48,33 @@ export default [
       "@typescript-eslint": tsPlugin,
     },
     rules: {
-      // ---- Airbnb rules reconstituées ----
+      // ---- Airbnb rules ----
       ...importPlugin.configs.recommended.rules,
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       ...jsxA11yPlugin.configs.recommended.rules,
+      ...bestPractices.rules,
+      ...errors.rules,
+      ...node.rules,
+      ...style.rules,
+      ...variables.rules,
+      ...es6.rules,
+      ...imports.rules,
+      ...strict.rules,
 
       // ---- TS Eslint ----
       ...tseslint.configs.recommended.rules,
       "@typescript-eslint/explicit-function-return-type": "off",
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_" },
       ],
 
       // ---- Personnalisations ----
       "no-underscore-dangle": "off",
       "react/react-in-jsx-scope": "off",
+      "no-console": "error",
 
       // ---- Prettier ----
       "prettier/prettier": [
@@ -98,18 +118,30 @@ export default [
           "newlines-between": "always",
         },
       ],
+      "import/extensions": [
+        "error",
+        "ignorePackages",
+        {
+          js: "never",
+          jsx: "never",
+          ts: "never",
+          tsx: "never",
+        },
+      ],
     },
     settings: {
-      react: {
-        version: "detect",
-      },
+      react: { version: "detect" },
       "import/resolver": {
+        typescript: {},
         alias: {
-          map: [["", "./public"]],
+          map: [
+            ["", "./public"],
+            ["@", "./src"],
+          ],
           extensions: [
             ".js",
             ".jsx",
-            "ts",
+            ".ts",
             ".tsx",
             ".json",
             ".css",
